@@ -402,6 +402,25 @@ function renderSummary() {
   els.driveMetric.textContent = state.settings.driveConnected ? "On" : "Off";
   els.savingsRate.textContent = `${Math.max(savingsPercent, 0)}% saved`;
 
+  // Budget ring visual updates
+  const budgetRing = document.getElementById("budgetRing");
+  const budgetRingText = document.getElementById("budgetRingText");
+  if (budgetRing && budgetRingText) {
+    const clampedPercent = Math.min(100, Math.max(0, budgetPercent));
+    budgetRing.setAttribute("stroke-dasharray", `${clampedPercent}, 100`);
+    budgetRingText.textContent = `${budgetPercent}%`;
+    if (budgetPercent > 100) {
+      budgetRing.setAttribute("stroke", "var(--expense)");
+      budgetRingText.style.color = "var(--expense)";
+    } else if (budgetPercent >= 80) {
+      budgetRing.setAttribute("stroke", "var(--amber)");
+      budgetRingText.style.color = "var(--amber)";
+    } else {
+      budgetRing.setAttribute("stroke", "var(--brand)");
+      budgetRingText.style.color = "var(--text-primary)";
+    }
+  }
+
   const dashName = document.getElementById("dashProfileName");
   if (dashName) dashName.textContent = state.settings.profileName || "User";
   
@@ -502,43 +521,77 @@ function roundedRect(ctx, x, y, width, height, radius) {
   ctx.closePath();
 }
 
-function drawCategoryChart() {
+let categoryChartSlices = [];
+let monthlyChartData = [];
+
+function drawCategoryChart(hoveredIndex = -1) {
   const canvas = els.categoryChart;
   const ctx = canvas.getContext("2d");
-  const data = Object.entries(expenseByCategory(monthTransactions())).sort((a, b) => b[1] - a[1]);
-  const total = data.reduce((sum, [, value]) => sum + value, 0);
-  els.categoryChartTotal.textContent = money(total);
-  els.categoryLegend.innerHTML = "";
-  if (!total) return drawEmpty(ctx, canvas.width, canvas.height, "No expenses this month");
+  
+  if (hoveredIndex === -1) {
+    const data = Object.entries(expenseByCategory(monthTransactions())).sort((a, b) => b[1] - a[1]);
+    const total = data.reduce((sum, [, value]) => sum + value, 0);
+    els.categoryChartTotal.textContent = money(total);
+    els.categoryLegend.innerHTML = "";
+    
+    if (!total) {
+      categoryChartSlices = [];
+      return drawEmpty(ctx, canvas.width, canvas.height, "No expenses this month");
+    }
+    
+    categoryChartSlices = [];
+    let startAngle = -Math.PI / 2;
+    data.forEach(([category, value], index) => {
+      const slice = (value / total) * Math.PI * 2;
+      const endAngle = startAngle + slice;
+      categoryChartSlices.push({
+        category,
+        value,
+        percent: Math.round((value / total) * 100),
+        startAngle,
+        endAngle,
+        color: chartColors[index % chartColors.length]
+      });
+      startAngle = endAngle;
+      
+      const percent = Math.round((value / total) * 100);
+      const item = document.createElement("div");
+      item.className = "legend-item";
+      item.innerHTML = `<span class="legend-left"><span class="swatch" style="background:${chartColors[index % chartColors.length]}"></span><strong>${escapeHtml(category)}</strong></span><span>${money(value)} <small>${percent}%</small></span>`;
+      els.categoryLegend.append(item);
+    });
+  }
+  
+  const total = categoryChartSlices.reduce((sum, s) => sum + s.value, 0);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   const bg = ctx.createLinearGradient(0, 0, 0, canvas.height);
   bg.addColorStop(0, "#0d0d1c");
   bg.addColorStop(1, "#070713");
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
   const centerX = canvas.width / 2;
   const centerY = canvas.height / 2;
   const radius = Math.min(canvas.width, canvas.height) * 0.28;
-  let startAngle = -Math.PI / 2;
-  data.forEach(([category, value], index) => {
-    const slice = (value / total) * Math.PI * 2;
+  
+  categoryChartSlices.forEach((slice, index) => {
+    const isHovered = index === hoveredIndex;
+    const currentRadius = isHovered ? radius + 4 : radius;
+    const currentLineWidth = isHovered ? 28 : 22;
+    
     ctx.beginPath();
-    ctx.arc(centerX, centerY, radius, startAngle, startAngle + slice);
-    ctx.strokeStyle = chartColors[index % chartColors.length];
-    ctx.lineWidth = 22;
+    ctx.arc(centerX, centerY, currentRadius, slice.startAngle, slice.endAngle);
+    ctx.strokeStyle = slice.color;
+    ctx.lineWidth = currentLineWidth;
     ctx.lineCap = "round";
     ctx.stroke();
-    startAngle += slice;
-    const percent = Math.round((value / total) * 100);
-    const item = document.createElement("div");
-    item.className = "legend-item";
-    item.innerHTML = `<span class="legend-left"><span class="swatch" style="background:${chartColors[index % chartColors.length]}"></span><strong>${escapeHtml(category)}</strong></span><span>${money(value)} <small>${percent}%</small></span>`;
-    els.categoryLegend.append(item);
   });
+  
   ctx.beginPath();
   ctx.arc(centerX, centerY, Math.max(radius - 22, 30), 0, Math.PI * 2);
   ctx.fillStyle = "#090917";
   ctx.fill();
+  
   ctx.fillStyle = "#f0f0fa";
   ctx.font = "800 14px Inter, Segoe UI, Arial";
   ctx.textAlign = "center";
@@ -554,10 +607,15 @@ function monthlyGroups() {
   return months.map((month) => ({ month, ...totalsFor(state.transactions.filter((tx) => tx.date.startsWith(month))) }));
 }
 
-function drawMonthlyChart() {
+function drawMonthlyChart(hoveredIndex = -1) {
   const canvas = els.monthlyChart;
   const ctx = canvas.getContext("2d");
-  const data = monthlyGroups();
+  
+  if (hoveredIndex === -1) {
+    monthlyChartData = monthlyGroups();
+  }
+  
+  const data = monthlyChartData;
   const budget = Number(state.settings.budget) || 0;
   const maxValue = Math.max(...data.map((item) => Math.max(item.income, item.expense)), budget, 1);
   const width = canvas.width;
@@ -565,12 +623,14 @@ function drawMonthlyChart() {
   const padding = { top: 34, right: 34, bottom: 46, left: 68 };
   const chartWidth = width - padding.left - padding.right;
   const chartHeight = height - padding.top - padding.bottom;
+  
   ctx.clearRect(0, 0, width, height);
   const bg = ctx.createLinearGradient(0, 0, 0, height);
   bg.addColorStop(0, "#0d0d1c");
   bg.addColorStop(1, "#070713");
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, width, height);
+  
   ctx.font = "700 12px JetBrains Mono, Consolas, monospace";
   ctx.lineWidth = 1;
   ctx.textAlign = "right";
@@ -587,8 +647,10 @@ function drawMonthlyChart() {
     ctx.fillStyle = "#8d9aaa";
     ctx.fillText(shortMoney(value), padding.left - 10, y + 4);
   }
+  
   const xFor = (index) => padding.left + (chartWidth / Math.max(data.length - 1, 1)) * index;
   const yFor = (value) => padding.top + chartHeight - (value / maxValue) * chartHeight;
+  
   if (budget > 0) {
     const y = yFor(budget);
     ctx.strokeStyle = "rgba(196,181,253,0.72)";
@@ -600,8 +662,10 @@ function drawMonthlyChart() {
     ctx.stroke();
     ctx.setLineDash([]);
   }
+  
   const expensePoints = data.map((item, index) => [xFor(index), yFor(item.expense)]);
   const incomePoints = data.map((item, index) => [xFor(index), yFor(item.income)]);
+  
   const area = ctx.createLinearGradient(0, padding.top, 0, height - padding.bottom);
   area.addColorStop(0, "rgba(94,234,212,0.28)");
   area.addColorStop(1, "rgba(94,234,212,0)");
@@ -615,6 +679,7 @@ function drawMonthlyChart() {
   ctx.closePath();
   ctx.fillStyle = area;
   ctx.fill();
+  
   [
     { points: incomePoints, color: "rgba(52,211,153,0.86)", width: 2 },
     { points: expensePoints, color: "#5eead4", width: 3 },
@@ -628,26 +693,160 @@ function drawMonthlyChart() {
     ctx.lineWidth = lineWidth;
     ctx.stroke();
   });
-  expensePoints.forEach(([x, y]) => {
+  
+  // Draw hovered vertical helper line
+  if (hoveredIndex !== -1 && hoveredIndex < data.length) {
+    const hoverX = xFor(hoveredIndex);
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(hoverX, padding.top);
+    ctx.lineTo(hoverX, height - padding.bottom);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  
+  expensePoints.forEach(([x, y], index) => {
+    const isHovered = index === hoveredIndex;
     ctx.fillStyle = "#070713";
     ctx.strokeStyle = "#5eead4";
-    ctx.lineWidth = 2;
+    ctx.lineWidth = isHovered ? 4 : 2;
     ctx.beginPath();
-    ctx.arc(x, y, 4, 0, Math.PI * 2);
+    ctx.arc(x, y, isHovered ? 6 : 4, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
   });
+  
+  incomePoints.forEach(([x, y], index) => {
+    const isHovered = index === hoveredIndex;
+    if (isHovered) {
+      ctx.fillStyle = "#070713";
+      ctx.strokeStyle = "rgba(52,211,153,0.86)";
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.arc(x, y, 6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    }
+  });
+
   data.forEach((item, index) => {
-    ctx.fillStyle = "#8d9aaa";
+    ctx.fillStyle = index === hoveredIndex ? "#f0f0fa" : "#8d9aaa";
     ctx.textAlign = "center";
     ctx.fillText(labelMonth(item.month), xFor(index), height - 20);
   });
+  
   ctx.textAlign = "right";
   ctx.font = "700 12px Inter, Segoe UI, Arial";
   ctx.fillStyle = "#5eead4";
   ctx.fillText("Expense", width - padding.right - 74, padding.top - 12);
   ctx.fillStyle = "rgba(196,181,253,0.85)";
   ctx.fillText("Budget", width - padding.right, padding.top - 12);
+}
+
+function handleCategoryChartHover(event) {
+  if (!categoryChartSlices.length) return;
+  const canvas = els.categoryChart;
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  const mouseX = (event.clientX - rect.left) * scaleX;
+  const mouseY = (event.clientY - rect.top) * scaleY;
+  
+  const centerX = canvas.width / 2;
+  const centerY = canvas.height / 2;
+  const dx = mouseX - centerX;
+  const dy = mouseY - centerY;
+  const distance = Math.sqrt(dx * dx + dy * dy);
+  const radius = Math.min(canvas.width, canvas.height) * 0.28;
+  
+  let hoveredIndex = -1;
+  if (distance >= radius - 26 && distance <= radius + 26) {
+    let angle = Math.atan2(dy, dx);
+    if (angle < -Math.PI / 2) {
+      angle += Math.PI * 2;
+    }
+    hoveredIndex = categoryChartSlices.findIndex(s => angle >= s.startAngle && angle < s.endAngle);
+  }
+  
+  const tooltip = document.getElementById("chartTooltip");
+  if (hoveredIndex !== -1) {
+    const slice = categoryChartSlices[hoveredIndex];
+    canvas.style.cursor = "pointer";
+    drawCategoryChart(hoveredIndex);
+    
+    tooltip.style.display = "block";
+    tooltip.style.left = `${event.pageX + 15}px`;
+    tooltip.style.top = `${event.pageY + 15}px`;
+    tooltip.innerHTML = `
+      <strong>${escapeHtml(slice.category)}</strong>
+      <div><span class="label">Amount:</span><span class="value" style="color: ${slice.color}">${money(slice.value)}</span></div>
+      <div><span class="label">Share:</span><span class="value">${slice.percent}%</span></div>
+    `;
+  } else {
+    canvas.style.cursor = "default";
+    drawCategoryChart(-1);
+    tooltip.style.display = "none";
+  }
+}
+
+function handleCategoryChartLeave() {
+  const canvas = els.categoryChart;
+  canvas.style.cursor = "default";
+  drawCategoryChart(-1);
+  const tooltip = document.getElementById("chartTooltip");
+  tooltip.style.display = "none";
+}
+
+function handleMonthlyChartHover(event) {
+  if (!monthlyChartData.length) return;
+  const canvas = els.monthlyChart;
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  const mouseX = (event.clientX - rect.left) * scaleX;
+  
+  const padding = { top: 34, right: 34, bottom: 46, left: 68 };
+  const chartWidth = canvas.width - padding.left - padding.right;
+  const dataLen = monthlyChartData.length;
+  
+  let hoveredIndex = -1;
+  const xStart = padding.left;
+  const xEnd = canvas.width - padding.right;
+  if (mouseX >= xStart - 10 && mouseX <= xEnd + 10) {
+    const relativeX = Math.max(0, Math.min(chartWidth, mouseX - xStart));
+    hoveredIndex = Math.round((relativeX / chartWidth) * (dataLen - 1));
+  }
+  
+  const tooltip = document.getElementById("chartTooltip");
+  if (hoveredIndex !== -1 && hoveredIndex < dataLen) {
+    const item = monthlyChartData[hoveredIndex];
+    canvas.style.cursor = "pointer";
+    drawMonthlyChart(hoveredIndex);
+    
+    tooltip.style.display = "block";
+    tooltip.style.left = `${event.pageX + 15}px`;
+    tooltip.style.top = `${event.pageY + 15}px`;
+    tooltip.innerHTML = `
+      <strong>${labelMonth(item.month)}</strong>
+      <div><span class="label">Expense:</span><span class="value" style="color: #5eead4">${money(item.expense)}</span></div>
+      <div><span class="label">Income:</span><span class="value" style="color: #34d399">${money(item.income)}</span></div>
+      <div><span class="label">Savings:</span><span class="value" style="color: ${item.income >= item.expense ? '#34d399' : '#ef4444'}">${money(item.income - item.expense)}</span></div>
+    `;
+  } else {
+    canvas.style.cursor = "default";
+    drawMonthlyChart(-1);
+    tooltip.style.display = "none";
+  }
+}
+
+function handleMonthlyChartLeave() {
+  const canvas = els.monthlyChart;
+  canvas.style.cursor = "default";
+  drawMonthlyChart(-1);
+  const tooltip = document.getElementById("chartTooltip");
+  tooltip.style.display = "none";
 }
 
 function renderTransactions() {
@@ -1617,6 +1816,17 @@ function wireEvents() {
     });
   }
   els.reportMonth.addEventListener("change", renderReports);
+  
+  // Chart Interaction event listeners
+  if (els.categoryChart) {
+    els.categoryChart.addEventListener("mousemove", handleCategoryChartHover);
+    els.categoryChart.addEventListener("mouseleave", handleCategoryChartLeave);
+  }
+  if (els.monthlyChart) {
+    els.monthlyChart.addEventListener("mousemove", handleMonthlyChartHover);
+    els.monthlyChart.addEventListener("mouseleave", handleMonthlyChartLeave);
+  }
+
   [els.searchInput, els.typeFilter, els.categoryFilter, els.monthFilter, els.sourceFilter, els.statusFilter].forEach((input) => {
     input.addEventListener("input", renderTransactions);
     input.addEventListener("change", renderTransactions);

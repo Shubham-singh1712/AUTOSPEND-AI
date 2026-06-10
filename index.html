@@ -268,11 +268,20 @@
                   <line x1="2" y1="10" x2="22" y2="10" />
                 </svg></div>
             </div>
-            <div>
-              <strong id="dashTotalExpense" class="mono" style="font-size: 2rem;">$0</strong>
-              <p id="dashExpenseTrend"
-                style="margin: 8px 0 0; font-size: 0.85rem; font-weight: 600; color: var(--expense);">+0% vs last month
-              </p>
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 4px;">
+              <div>
+                <strong id="dashTotalExpense" class="mono" style="font-size: 2rem;">$0</strong>
+                <p id="dashExpenseTrend"
+                  style="margin: 8px 0 0; font-size: 0.85rem; font-weight: 600; color: var(--expense);">+0% vs last month
+                </p>
+              </div>
+              <div class="budget-ring-container" title="Budget Progress">
+                <svg width="40" height="40" viewBox="0 0 36 36">
+                  <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="3" />
+                  <path id="budgetRing" class="ring-fg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="var(--brand)" stroke-width="3" stroke-dasharray="0, 100" stroke-linecap="round" />
+                </svg>
+                <span id="budgetRingText">0%</span>
+              </div>
             </div>
           </article>
 
@@ -724,6 +733,7 @@
     </main>
   </div>
 
+  <div id="chartTooltip" class="chart-tooltip" style="display: none;"></div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="app.js"></script>
 </body>
