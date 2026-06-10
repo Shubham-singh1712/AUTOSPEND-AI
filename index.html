@@ -74,40 +74,52 @@
           <span>AutoSpend AI</span>
         </div>
         <nav class="tabs" aria-label="Views">
-          <button class="tab-button active" type="button" data-view="overview" title="Dashboard">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="8" rx="1.5"></rect><rect x="14" y="3" width="7" height="5" rx="1.5"></rect><rect x="14" y="12" width="7" height="9" rx="1.5"></rect><rect x="3" y="15" width="7" height="6" rx="1.5"></rect></svg>
-            <span class="tab-label">Dashboard</span>
-          </button>
-          <button class="tab-button" type="button" data-view="transactions" title="Transactions">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 7h11"></path><path d="M8 12h11"></path><path d="M8 17h11"></path><path d="M4 7h.01"></path><path d="M4 12h.01"></path><path d="M4 17h.01"></path></svg>
-            <span class="tab-label">Transactions</span>
-          </button>
-          <button class="tab-button" type="button" data-view="intake" title="Data Intake">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 21h14"></path></svg>
-            <span class="tab-label">Data Intake</span>
-          </button>
-          <button class="tab-button" type="button" data-view="review" title="AI Review">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.6 4.7L18 10l-4.4 2.3L12 17l-1.6-4.7L6 10l4.4-2.3L12 3z"></path><path d="M19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8L19 16z"></path></svg>
-            <span class="tab-label">AI Review</span>
-            <span class="badge" id="sidebarReviewBadge">0</span>
-          </button>
-          <button class="tab-button" type="button" data-view="drive" title="Drive Sync">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 3 2 17.5 5.8 21h12.4L22 17.5 13.5 3h-3z"></path><path d="M8 17.5h8"></path></svg>
-            <span class="tab-label">Drive Sync</span>
-          </button>
-          <button class="tab-button" type="button" data-view="reports" title="Reports">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5"></path><path d="M4 19h16"></path><rect x="7" y="11" width="3" height="5" rx="1"></rect><rect x="12" y="7" width="3" height="9" rx="1"></rect><rect x="17" y="13" width="3" height="3" rx="1"></rect></svg>
-            <span class="tab-label">Reports</span>
-          </button>
-          <button class="tab-button" type="button" data-view="assistant" title="AI Assistant">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6V3"></path><path d="M8 21h8"></path><rect x="5" y="6" width="14" height="12" rx="4"></rect><path d="M9 11h.01"></path><path d="M15 11h.01"></path><path d="M9 15h6"></path></svg>
-            <span class="tab-label">AI Assistant</span>
-          </button>
+          <div class="nav-group">
+            <span class="nav-section-title">OVERVIEW</span>
+            <button class="tab-button active" type="button" data-view="overview" title="Dashboard">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="8" rx="1.5"></rect><rect x="14" y="3" width="7" height="5" rx="1.5"></rect><rect x="14" y="12" width="7" height="9" rx="1.5"></rect><rect x="3" y="15" width="7" height="6" rx="1.5"></rect></svg>
+                        <span class="tab-label">Dashboard</span>
+                      </button>
+            <button class="tab-button" type="button" data-view="transactions" title="Transactions">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 7h11"></path><path d="M8 12h11"></path><path d="M8 17h11"></path><path d="M4 7h.01"></path><path d="M4 12h.01"></path><path d="M4 17h.01"></path></svg>
+                        <span class="tab-label">Transactions</span>
+                      </button>
+          </div>
+          <div class="nav-group">
+            <span class="nav-section-title">PROCESSING</span>
+            <button class="tab-button" type="button" data-view="intake" title="Data Intake">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 21h14"></path></svg>
+                        <span class="tab-label">Data Intake</span>
+                      </button>
+            <button class="tab-button" type="button" data-view="review" title="AI Review">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.6 4.7L18 10l-4.4 2.3L12 17l-1.6-4.7L6 10l4.4-2.3L12 3z"></path><path d="M19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8L19 16z"></path></svg>
+                        <span class="tab-label">AI Review</span>
+                        <span class="badge" id="sidebarReviewBadge">0</span>
+                      </button>
+            <button class="tab-button" type="button" data-view="drive" title="Drive Sync">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 3 2 17.5 5.8 21h12.4L22 17.5 13.5 3h-3z"></path><path d="M8 17.5h8"></path></svg>
+                        <span class="tab-label">Drive Sync</span>
+                      </button>
+          </div>
+          <div class="nav-group">
+            <span class="nav-section-title">INSIGHTS</span>
+            <button class="tab-button" type="button" data-view="reports" title="Reports">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5"></path><path d="M4 19h16"></path><rect x="7" y="11" width="3" height="5" rx="1"></rect><rect x="12" y="7" width="3" height="9" rx="1"></rect><rect x="17" y="13" width="3" height="3" rx="1"></rect></svg>
+                        <span class="tab-label">Reports</span>
+                      </button>
+            <button class="tab-button" type="button" data-view="assistant" title="AI Assistant">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6V3"></path><path d="M8 21h8"></path><rect x="5" y="6" width="14" height="12" rx="4"></rect><path d="M9 11h.01"></path><path d="M15 11h.01"></path><path d="M9 15h6"></path></svg>
+                        <span class="tab-label">AI Assistant</span>
+                      </button>
+          </div>
           <div class="sidebar-spacer"></div>
-          <button class="tab-button" type="button" data-view="settings" title="Settings">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"></path><path d="M19.4 15a1.8 1.8 0 0 0 .4 2l.1.1a2 2 0 0 1-2.8 2.8l-.1-.1a1.8 1.8 0 0 0-2-.4 1.8 1.8 0 0 0-1 1.6V21a2 2 0 0 1-4 0v-.1a1.8 1.8 0 0 0-1-1.6 1.8 1.8 0 0 0-2 .4l-.1.1a2 2 0 0 1-2.8-2.8l.1-.1a1.8 1.8 0 0 0 .4-2 1.8 1.8 0 0 0-1.6-1H3a2 2 0 0 1 0-4h.1a1.8 1.8 0 0 0 1.6-1 1.8 1.8 0 0 0-.4-2l-.1-.1a2 2 0 0 1 2.8-2.8l.1.1a1.8 1.8 0 0 0 2 .4 1.8 1.8 0 0 0 1-1.6V3a2 2 0 0 1 4 0v.1a1.8 1.8 0 0 0 1 1.6 1.8 1.8 0 0 0 2-.4l.1-.1a2 2 0 0 1 2.8 2.8l-.1.1a1.8 1.8 0 0 0-.4 2 1.8 1.8 0 0 0 1.6 1h.1a2 2 0 0 1 0 4h-.1a1.8 1.8 0 0 0-1.6 1z"></path></svg>
-            <span class="tab-label">Settings</span>
-          </button>
+          <div class="nav-group">
+            <span class="nav-section-title">SYSTEM</span>
+            <button class="tab-button" type="button" data-view="settings" title="Settings">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"></path><path d="M19.4 15a1.8 1.8 0 0 0 .4 2l.1.1a2 2 0 0 1-2.8 2.8l-.1-.1a1.8 1.8 0 0 0-2-.4 1.8 1.8 0 0 0-1 1.6V21a2 2 0 0 1-4 0v-.1a1.8 1.8 0 0 0-1-1.6 1.8 1.8 0 0 0-2 .4l-.1.1a2 2 0 0 1-2.8-2.8l.1-.1a1.8 1.8 0 0 0 .4-2 1.8 1.8 0 0 0-1.6-1H3a2 2 0 0 1 0-4h.1a1.8 1.8 0 0 0 1.6-1 1.8 1.8 0 0 0-.4-2l-.1-.1a2 2 0 0 1 2.8-2.8l.1.1a1.8 1.8 0 0 0 2 .4 1.8 1.8 0 0 0 1-1.6V3a2 2 0 0 1 4 0v.1a1.8 1.8 0 0 0 1 1.6 1.8 1.8 0 0 0 2-.4l.1-.1a2 2 0 0 1 2.8 2.8l-.1.1a1.8 1.8 0 0 0-.4 2 1.8 1.8 0 0 0 1.6 1h.1a2 2 0 0 1 0 4h-.1a1.8 1.8 0 0 0-1.6 1z"></path></svg>
+                        <span class="tab-label">Settings</span>
+                      </button>
+          </div>
         </nav>
         
         <div class="sidebar-profile">
@@ -142,10 +154,9 @@
             </div>
           </header>
 
-
           <div class="dash-header" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
             <div>
-              <p style="display: inline-flex; align-items: center; gap: 8px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04); padding: 4px 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.18em; color: var(--brand); margin-bottom: 8px;">✦ Live backend</p>
+              <p style="display: inline-flex; align-items: center; gap: 8px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04); padding: 4px 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.18em; color: var(--brand); margin-bottom: 8px; line-height: 1;">✦ Live backend</p>
               <h1 class="screen-title" style="margin-bottom: 4px;">Good morning, <span id="dashProfileName">User</span></h1>
               <p style="color: var(--text-muted); font-size: 0.875rem; line-height: 1.5; margin-top: 4px;">Financial overview • <span id="dashMonthLabel">May 2026</span></p>
             </div>
