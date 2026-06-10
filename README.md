@@ -35,31 +35,59 @@ AutoSpend AI implements a **zero-click background sync pipeline** with **local-f
 
 ## 📐 System Architecture
 
-AutoSpend AI runs locally as a single-origin server, ensuring privacy and resolving Google OAuth redirect limitations.
+AutoSpend AI's product architecture prioritizes a localized, privacy-centric ingestion flow. Instead of managing complex cloud server pipelines, it processes transactions on-device through a unified local setup.
 
 ```mermaid
-graph TD
-    subgraph Client Browser (Local View)
-        GUI[Glassmorphic HTML5/CSS3 Dashboard]
-        LS[localStorage Client Cache]
-        Canvas[Trigonometric Canvas Visualizations]
-    end
+flowchart TD
+    %% Nodes definition
+    User["👤 User"]
+    
+    %% Input Layer
+    Manual["✍️ Manual Entry"]
+    DriveSync["☁️ Google Drive Sync"]
+    Upload["📤 Receipt Upload"]
+    
+    %% Processing Layer
+    Intake["📥 Data Intake Layer"]
+    AIExtract["🧠 AI Extraction & Validation"]
+    DB[("🗄️ SQLite Database")]
+    
+    %% Consumption/Features Layer
+    Dashboard["📊 Dashboard Analytics"]
+    Reports["📈 Reports Engine"]
+    Assistant["💬 AI Finance Assistant"]
+    
+    %% Value Output
+    Insights["💡 Financial Insights"]
 
-    subgraph Local Host Machine (Backend)
-        Srv[Python ThreadingHTTPServer - Unified Port 8787]
-        DB[(SQLite - autospend.db)]
-        AI[AI Parser Client]
-    end
+    %% Flow connections
+    User --> Manual
+    User --> DriveSync
+    User --> Upload
+    
+    Manual --> Intake
+    DriveSync --> Intake
+    Upload --> Intake
+    
+    Intake --> AIExtract
+    AIExtract --> DB
+    
+    DB --> Dashboard
+    DB --> Reports
+    DB --> Assistant
+    
+    Dashboard --> Insights
+    Reports --> Insights
+    Assistant --> Insights
 
-    subgraph External Secure Integrations
-        GDrive[Google Drive API - Receipts Folder]
-        LLM[LLM API - OpenRouter/Gemini or OpenAI]
-    end
-
-    GUI <-->|API Calls / REST JSON| Srv
-    LS <-->|Auto Sync| DB
-    Srv <-->|OAuth/Fetch Screenshots| GDrive
-    Srv <-->|Secure Extraction Prompt| LLM
+    %% Styling
+    classDef primary fill:#1e293b,stroke:#3b82f6,stroke-width:2px,color:#f8fafc;
+    classDef secondary fill:#0f172a,stroke:#475569,stroke-width:1px,color:#cbd5e1;
+    classDef accent fill:#0d9488,stroke:#0f766e,stroke-width:2px,color:#f8fafc;
+    
+    class User,Insights accent;
+    class Manual,DriveSync,Upload secondary;
+    class Intake,AIExtract,DB,Dashboard,Reports,Assistant primary;
 ```
 
 ---
