@@ -590,7 +590,7 @@ function ReviewScreen({ transactions, settings, onUpdate }: { transactions: Tran
     const next = transactions.map((item) => item.id === tx.id ? { ...item, status } : item);
     onUpdate(next);
     if (status === "saved") {
-      apiPost("/api/transaction/correct", { id: tx.id, transaction: { ...tx, status }, analysis: tx.aiAnalysis }).catch(() => {});
+      apiPost("/api/transaction/correct", { id: tx.id, transaction: { ...tx, status }, analysis: tx.aiAnalysis }).catch(() => { });
     }
   }
 
@@ -678,7 +678,7 @@ function DriveScreen({ settings, onSettings, onParsed }: { settings: SettingsSta
 
   useEffect(() => {
     const handler = (event: MessageEvent) => {
-      if (event.data?.type === "autospend-drive-auth") refresh().catch(() => {});
+      if (event.data?.type === "autospend-drive-auth") refresh().catch(() => { });
     };
     window.addEventListener("message", handler);
     return () => window.removeEventListener("message", handler);
@@ -997,11 +997,14 @@ const navItems = [
 function Sidebar({ view, setView, collapsed, setCollapsed, pending, settings, onLogout }: { view: View; setView: (view: View) => void; collapsed: boolean; setCollapsed: (value: boolean) => void; pending: number; settings: SettingsState; onLogout: () => void }) {
   return (
     <aside className={cx("hidden h-screen flex-col border-r border-white/8 bg-sidebar/95 transition-all duration-300 lg:flex", collapsed ? "w-[76px]" : "w-[250px]")}>
-      <div className="flex h-16 items-center gap-3 border-b border-white/8 px-4">
-        <div className="grid h-10 w-10 place-items-center rounded-2xl bg-cyan-300 text-slate-950 shadow-[0_0_32px_rgba(94,234,212,0.25)]">
-          <Zap size={18} />
+      <div className={cx("flex h-16 items-center border-b border-white/8", collapsed ? "justify-center gap-1 px-1" : "justify-between px-4")}>
+        <div className={cx("grid place-items-center rounded-2xl bg-cyan-300 text-slate-950 shadow-[0_0_32px_rgba(94,234,212,0.25)] flex-shrink-0", collapsed ? "h-8 w-8" : "h-10 w-10")}>
+          <Zap size={collapsed ? 15 : 18} />
         </div>
         {!collapsed && <div><p className="font-bold leading-none">AutoSpend AI</p><p className="mt-1 text-[11px] text-muted-foreground">Premium console</p></div>}
+        <button onClick={() => setCollapsed(!collapsed)} className={cx("flex-shrink-0 grid place-items-center rounded-2xl border border-white/10 bg-white/[0.045] text-muted-foreground transition hover:bg-white/[0.08] hover:text-foreground", collapsed ? "h-8 w-8" : "h-10 w-10 ml-auto")}>
+          {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+        </button>
       </div>
       <nav className="flex-1 space-y-1 overflow-y-auto p-3">
         {navItems.map(({ id: itemId, label, Icon }) => (
@@ -1019,8 +1022,7 @@ function Sidebar({ view, setView, collapsed, setCollapsed, pending, settings, on
             <p className="truncate text-xs text-muted-foreground">{settings.profileEmail || (settings.googleConnected ? "Google connected" : "Backend protected")}</p>
           </div>
         )}
-        <div className="flex gap-2">
-          <button onClick={() => setCollapsed(!collapsed)} className="secondary-icon">{collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}</button>
+        <div className={cx("flex", collapsed ? "justify-center" : "gap-2")}>
           <button onClick={onLogout} className="secondary-icon"><LogOut size={16} /></button>
         </div>
       </div>
@@ -1064,7 +1066,7 @@ export default function App() {
 
   function updateTransactions(next: Transaction[]) {
     setTransactions(next);
-    syncSnapshot(next).catch(() => {});
+    syncSnapshot(next).catch(() => { });
   }
 
   function addTx(tx: Transaction) {
@@ -1076,18 +1078,18 @@ export default function App() {
     const nextQueue = queueItem ? [queueItem, ...queue] : queue;
     setQueue(nextQueue);
     setTransactions([reviewTx, ...transactions]);
-    syncSnapshot([reviewTx, ...transactions], nextQueue).catch(() => {});
+    syncSnapshot([reviewTx, ...transactions], nextQueue).catch(() => { });
     setView("review");
   }
 
   function updateSettings(next: SettingsState) {
     setSettings(next);
-    syncSnapshot(transactions, queue, chat, next).catch(() => {});
+    syncSnapshot(transactions, queue, chat, next).catch(() => { });
   }
 
   function updateChat(next: ChatMessage[]) {
     setChat(next);
-    syncSnapshot(transactions, queue, next).catch(() => {});
+    syncSnapshot(transactions, queue, next).catch(() => { });
   }
 
   async function refreshHealth() {
@@ -1126,9 +1128,9 @@ export default function App() {
       setChat(Array.isArray(snap.chat) && snap.chat.length ? snap.chat : [emptyAssistant]);
       setSettings((current) => ({ ...current, ...(snap.settings || {}), serverDataSavedAt: Number(snap.savedAt || current.serverDataSavedAt) }));
       await Promise.all([
-        refreshAuth().catch(() => {}),
-        refreshDrive().catch(() => {}),
-        refreshHealth().catch(() => {}),
+        refreshAuth().catch(() => { }),
+        refreshDrive().catch(() => { }),
+        refreshHealth().catch(() => { }),
       ]);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to reach backend");
@@ -1148,7 +1150,7 @@ export default function App() {
   }
 
   async function logout() {
-    if (settings.googleConnected) await apiGet("/api/auth/logout").catch(() => {});
+    if (settings.googleConnected) await apiGet("/api/auth/logout").catch(() => { });
     updateSettings({ ...settings, googleConnected: false, localAuthenticated: false });
   }
 
@@ -1158,8 +1160,8 @@ export default function App() {
 
   useEffect(() => {
     const handler = (event: MessageEvent) => {
-      if (event.data?.type === "autospend-user-auth") refreshAuth().catch(() => {});
-      if (event.data?.type === "autospend-drive-auth") refreshDrive().catch(() => {});
+      if (event.data?.type === "autospend-user-auth") refreshAuth().catch(() => { });
+      if (event.data?.type === "autospend-drive-auth") refreshDrive().catch(() => { });
     };
     window.addEventListener("message", handler);
     return () => window.removeEventListener("message", handler);
