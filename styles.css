@@ -1256,6 +1256,18 @@ canvas {
   white-space: nowrap;
 }
 
+.activity-main em {
+  display: inline-flex;
+  margin-left: 6px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(94, 234, 212, 0.12);
+  color: var(--brand);
+  font-size: 0.72rem;
+  font-style: normal;
+  vertical-align: middle;
+}
+
 .activity-main small {
   color: var(--text-muted);
 }

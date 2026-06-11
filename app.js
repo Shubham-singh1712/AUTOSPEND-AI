@@ -144,6 +144,14 @@ function read(key, fallback) {
   }
 }
 
+function uniqueTransactionsById(transactions) {
+  const byId = new Map();
+  transactions.forEach((tx) => {
+    if (tx?.id) byId.set(tx.id, tx);
+  });
+  return Array.from(byId.values());
+}
+
 let serverPushTimer;
 
 function persist(options = {}) {
@@ -293,7 +301,7 @@ function sampleTransactions() {
 function loadState() {
   state.settings = { ...state.settings, ...read(keys.settings, {}) };
   const storedTransactions = read(keys.transactions, null);
-  state.transactions = Array.isArray(storedTransactions) ? storedTransactions.map(asTx) : sampleTransactions();
+  state.transactions = uniqueTransactionsById(Array.isArray(storedTransactions) ? storedTransactions.map(asTx) : sampleTransactions());
   state.queue = read(keys.queue, []);
   state.chat = read(keys.chat, []);
   if (!state.chat.length) {
@@ -466,17 +474,33 @@ function renderSummary() {
 
 function renderDashboardExtras(currentTotals, pending) {
   if (els.dashboardRecentList) {
-    const recent = state.transactions
+    const dedupedRecent = new Map();
+    state.transactions
       .filter((tx) => tx.status !== "rejected")
       .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt))
-      .slice(0, 5);
+      .forEach((tx) => {
+        const duplicateKey = [
+          tx.type,
+          tx.date,
+          String(tx.merchant || "").trim().toLowerCase(),
+          Number(tx.amount || 0).toFixed(2),
+          String(tx.sourceType || "").trim().toLowerCase(),
+        ].join("|");
+        const existing = dedupedRecent.get(duplicateKey);
+        if (existing) {
+          existing.count += 1;
+        } else {
+          dedupedRecent.set(duplicateKey, { tx, count: 1 });
+        }
+      });
+    const recent = Array.from(dedupedRecent.values()).slice(0, 5);
     els.dashboardRecentList.innerHTML = recent.length ? "" : `<div class="empty-state compact-empty">No transactions yet.</div>`;
-    recent.forEach((tx) => {
+    recent.forEach(({ tx, count }) => {
       const row = document.createElement("div");
       row.className = "dashboard-activity-item";
       row.innerHTML = `
         <span class="activity-icon ${tx.type}">${tx.type === "income" ? "+" : "-"}</span>
-        <span class="activity-main"><strong>${escapeHtml(tx.merchant)}</strong><small>${formatDate(tx.date)} · ${label(tx.sourceType)}</small></span>
+        <span class="activity-main"><strong>${escapeHtml(tx.merchant)}${count > 1 ? ` <em>x${count}</em>` : ""}</strong><small>${formatDate(tx.date)} · ${label(tx.sourceType)}</small></span>
         <span class="activity-amount ${tx.type}-text">${tx.type === "income" ? "+" : "-"}${money(tx.amount)}</span>`;
       els.dashboardRecentList.append(row);
     });
@@ -1054,6 +1078,7 @@ function handleLocalAuth(e) {
 
 function upsert(tx) {
   const index = state.transactions.findIndex((item) => item.id === tx.id);
+  state.transactions = state.transactions.filter((item, itemIndex) => item.id !== tx.id || itemIndex === index);
   if (index >= 0) state.transactions[index] = tx;
   else state.transactions.push(tx);
   persist();
@@ -1474,10 +1499,7 @@ async function handleUpload(e) {
     const file = files[i];
     try {
       const parsed = await processUploadFile(file, textHint);
-      if (parsed) {
-        state.transactions.unshift(parsed);
-        added++;
-      }
+      if (parsed) added++;
     } catch (err) {
       console.error(err);
     }
