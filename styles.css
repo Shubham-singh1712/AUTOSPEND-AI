@@ -781,6 +781,23 @@ button {
   line-height: 1;
 }
 
+select {
+  color-scheme: dark;
+  background-color: #141522;
+  color: var(--text-primary);
+}
+
+select option {
+  background-color: #141522;
+  color: #f0f0fa;
+}
+
+select option:checked,
+select option:hover {
+  background-color: #2a2d3d;
+  color: #ffffff;
+}
+
 input:focus,
 select:focus,
 textarea:focus {
