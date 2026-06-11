@@ -156,6 +156,7 @@ let serverPushTimer;
 
 function persist(options = {}) {
   const localOnly = options.localOnly === true;
+  state.transactions = uniqueTransactionsById(state.transactions);
   try {
     localStorage.setItem(keys.transactions, JSON.stringify(state.transactions));
     localStorage.setItem(keys.settings, JSON.stringify(state.settings));
@@ -226,7 +227,7 @@ async function pullServerData() {
 }
 
 function applyServerSnapshot(data) {
-  state.transactions = Array.isArray(data.transactions) ? data.transactions.map(asTx) : [];
+  state.transactions = uniqueTransactionsById(Array.isArray(data.transactions) ? data.transactions.map(asTx) : []);
   state.queue = Array.isArray(data.queue) ? data.queue : [];
   if (Array.isArray(data.chat) && data.chat.length) state.chat = data.chat;
   if (data.settings && typeof data.settings === "object") {

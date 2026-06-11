@@ -1045,6 +1045,16 @@ function MobileNav({ view, setView, pending }: { view: View; setView: (view: Vie
   );
 }
 
+function uniqueTx(list: Transaction[]): Transaction[] {
+  const seen = new Set<string>();
+  return list.filter((tx) => {
+    if (!tx.id) return true;
+    if (seen.has(tx.id)) return false;
+    seen.add(tx.id);
+    return true;
+  });
+}
+
 export default function App() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [queue, setQueue] = useState<QueueItem[]>([]);
@@ -1065,20 +1075,30 @@ export default function App() {
   }
 
   function updateTransactions(next: Transaction[]) {
-    setTransactions(next);
-    syncSnapshot(next).catch(() => { });
+    const deduped = uniqueTx(next);
+    setTransactions(deduped);
+    syncSnapshot(deduped).catch(() => { });
   }
 
   function addTx(tx: Transaction) {
-    updateTransactions([tx, ...transactions]);
+    setTransactions((prev) => {
+      const nextTx = uniqueTx([tx, ...prev]);
+      syncSnapshot(nextTx).catch(() => { });
+      return nextTx;
+    });
   }
 
   function addParsed(tx: Transaction, queueItem?: QueueItem) {
     const reviewTx = { ...tx, status: tx.status === "saved" && tx.sourceType !== "cash_text" ? "needs_review" as TransactionStatus : tx.status };
-    const nextQueue = queueItem ? [queueItem, ...queue] : queue;
-    setQueue(nextQueue);
-    setTransactions([reviewTx, ...transactions]);
-    syncSnapshot([reviewTx, ...transactions], nextQueue).catch(() => { });
+    setQueue((prevQueue) => {
+      const nextQueue = queueItem ? [queueItem, ...prevQueue] : prevQueue;
+      setTransactions((prevTx) => {
+        const nextTx = uniqueTx([reviewTx, ...prevTx]);
+        syncSnapshot(nextTx, nextQueue).catch(() => { });
+        return nextTx;
+      });
+      return nextQueue;
+    });
     setView("review");
   }
 
@@ -1123,7 +1143,7 @@ export default function App() {
     try {
       const snapshot = await apiGet("/api/data");
       const snap = snapshot as Snapshot;
-      setTransactions(Array.isArray(snap.transactions) ? snap.transactions.map((tx) => normalizeTx(tx, tx.sourceType)) : []);
+      setTransactions(uniqueTx(Array.isArray(snap.transactions) ? snap.transactions.map((tx) => normalizeTx(tx, tx.sourceType)) : []));
       setQueue(Array.isArray(snap.queue) ? snap.queue : []);
       setChat(Array.isArray(snap.chat) && snap.chat.length ? snap.chat : [emptyAssistant]);
       setSettings((current) => ({ ...current, ...(snap.settings || {}), serverDataSavedAt: Number(snap.savedAt || current.serverDataSavedAt) }));
